@@ -29,7 +29,7 @@ export default function Home() {
 
   return (
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
-      <h1>홈페이지</h1>
+      <h1>홈페이asd지</h1>
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
         <Link href="/sign_in_page" style={{ marginRight: '20px', padding: '10px 20px', background: '#0070f3', color: 'white', textDecoration: 'none', borderRadius: '5px' }}>
           로그인
