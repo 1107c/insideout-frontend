@@ -44,7 +44,12 @@ export default function Home() {
 
       // 오디오 파일 가져오기 시도
       console.log("Attempting to fetch audio file");
-      const audioResponse = await fetch(data.audioUrl);
+      const securityToken = data.audioUrl.split('X-Amz-Security-Token=')[1].split('&')[0];
+      const audioResponse = await fetch(data.audioUrl, {
+        headers: {
+          'X-Amz-Security-Token': securityToken
+        }
+      });
       console.log('Audio fetch response status:', audioResponse.status);
 
       if (!audioResponse.ok) {
