@@ -39,14 +39,13 @@ export default function Home() {
         throw new Error('No audio URL provided');
       }
 
-      const decodedUrl = decodeURIComponent(data.audioUrl);
-      console.log('Decoded URL:', decodedUrl);
-      setAudioUrl(decodedUrl);
+      console.log('Audio URL:', data.audioUrl);
+      setAudioUrl(data.audioUrl);
 
+      // 오디오 파일 가져오기 시도
       console.log("Attempting to fetch audio file");
-      const audioResponse = await fetch(decodedUrl);
+      const audioResponse = await fetch(data.audioUrl);
       console.log('Audio fetch response status:', audioResponse.status);
-      console.log('Audio fetch response headers:', audioResponse.headers);
 
       if (!audioResponse.ok) {
         throw new Error(`Failed to fetch audio: ${audioResponse.status} ${audioResponse.statusText}`);
@@ -55,9 +54,9 @@ export default function Home() {
       const blob = await audioResponse.blob();
       console.log("Audio blob received, size:", blob.size);
 
-      const audioUrl = URL.createObjectURL(blob);
-      console.log("Created object URL for audio:", audioUrl);
-      setAudioUrl(audioUrl);
+      const objectUrl = URL.createObjectURL(blob);
+      console.log("Created object URL for audio:", objectUrl);
+      setAudioUrl(objectUrl);
 
     } catch (error) {
       console.error('Error:', error);
