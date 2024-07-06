@@ -36,7 +36,7 @@ export default function Home() {
 	  // 오디오 파일 가져오기
 	  const audioResponse = await fetch(data.audioUrl, {
 		method: 'GET',
-		mode: 'cors',
+		mode: 'no-cors',
 	  });
   
 	  if (!audioResponse.ok) {
