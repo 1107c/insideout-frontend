@@ -24,7 +24,7 @@ export default function Home() {
         console.error('Server responded with status:', response.status);
         const errorText = await response.text();
         console.error('Error response:', errorText);
-        throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+        throw new Error('Network response was not ok');
       }
 
       const data = await response.json();
@@ -35,41 +35,16 @@ export default function Home() {
         throw new Error('No audio URL provided');
       }
 
-      console.log('Audio URL:', data.audioUrl);
-      setAudioUrl(data.audioUrl);
-
-      // 오디오 파일 가져오기 시도
-      console.log("Attempting to fetch audio file");
-      const audioResponse = await fetch(data.audioUrl);
-      console.log('Audio fetch response status:', audioResponse.status);
-
-      if (!audioResponse.ok) {
-        throw new Error(`Failed to fetch audio: ${audioResponse.status} ${audioResponse.statusText}`);
-      }
-
-      const blob = await audioResponse.blob();
-      console.log("Audio blob received, size:", blob.size);
-
-      const objectUrl = URL.createObjectURL(blob);
-      console.log("Created object URL for audio:", objectUrl);
-      setAudioUrl(objectUrl);
-
+      const decodedUrl = decodeURIComponent(data.audioUrl);
+      console.log('Decoded URL:', decodedUrl);
+      setAudioUrl(decodedUrl);
     } catch (error) {
       console.error('Error:', error);
-      setError(`Failed to load audio: ${error.message}`);
+      setError('Failed to load audio. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    return () => {
-      // Clean up object URL when component unmounts
-      if (audioUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(audioUrl);
-      }
-    };
-  }, [audioUrl]);
 
   return (
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
@@ -91,7 +66,7 @@ export default function Home() {
       {audioUrl && (
         <div>
           <p>Audio URL: {audioUrl}</p>
-          <audio controls onError={(e) => console.error("Audio playback error:", e)}>
+          <audio controls>
             <source src={audioUrl} type="audio/wav" />
             Your browser does not support the audio element.
           </audio>
