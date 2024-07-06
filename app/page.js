@@ -39,13 +39,18 @@ export default function Home() {
         throw new Error('No audio URL provided');
       }
 
-      console.log('Audio URL:', data.audioUrl);
-      setAudioUrl(data.audioUrl);
+      // URL에서 보안 토큰 추출
+      const url = new URL(data.audioUrl);
+      const securityToken = url.searchParams.get('X-Amz-Security-Token');
+      
+      // URL에서 보안 토큰 파라미터 제거
+      url.searchParams.delete('X-Amz-Security-Token');
+      
+      console.log('Audio URL:', url.toString());
 
       // 오디오 파일 가져오기 시도
       console.log("Attempting to fetch audio file");
-      const securityToken = data.audioUrl.split('X-Amz-Security-Token=')[1].split('&')[0];
-      const audioResponse = await fetch(data.audioUrl, {
+      const audioResponse = await fetch(url.toString(), {
         headers: {
           'X-Amz-Security-Token': securityToken
         }
