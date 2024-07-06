@@ -7,7 +7,6 @@ export default function Home() {
   const [audioUrl, setAudioUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [audioKey, setAudioKey] = useState(0); // 새로운 state 추가
 
   const handleButtonClick = async () => {
     try {
@@ -17,7 +16,6 @@ export default function Home() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate' // 캐시 방지 헤더 추가
         },
         body: JSON.stringify({ action: 'initialize' }),
       });
@@ -40,7 +38,6 @@ export default function Home() {
       const decodedUrl = decodeURIComponent(data.audioUrl);
       console.log('Decoded URL:', decodedUrl);
       setAudioUrl(decodedUrl);
-      setAudioKey(prevKey => prevKey + 1); // audioKey를 증가시켜 오디오 요소를 새로 렌더링
     } catch (error) {
       console.error('Error:', error);
       setError('Failed to load audio. Please try again.');
@@ -69,8 +66,8 @@ export default function Home() {
       {audioUrl && (
         <div>
           <p>Audio URL: {audioUrl}</p>
-          <audio key={audioKey} controls autoPlay>
-            <source src={`${audioUrl}?t=${new Date().getTime()}`} type="audio/wav" />
+          <audio controls>
+            <source src={audioUrl} type="audio/wav" />
             Your browser does not support the audio element.
           </audio>
         </div>
