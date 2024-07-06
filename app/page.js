@@ -9,7 +9,6 @@ export default function Home() {
   const [error, setError] = useState(null);
 
   const handleButtonClick = async () => {
-    console.log("Initiating API call to fetch audio URL");
     try {
       setIsLoading(true);
       setError(null);
@@ -21,69 +20,31 @@ export default function Home() {
         body: JSON.stringify({ action: 'initialize' }),
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-
       if (!response.ok) {
         console.error('Server responded with status:', response.status);
         const errorText = await response.text();
         console.error('Error response:', errorText);
-        throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+        throw new Error('Network response was not ok');
       }
 
       const data = await response.json();
-      console.log('Received data from server:', data);
+      console.log('Received data:', data);
 
       if (!data.audioUrl) {
         console.error('No audio URL in the response');
         throw new Error('No audio URL provided');
       }
 
-      // URL에서 보안 토큰 추출
-      const url = new URL(data.audioUrl);
-      const securityToken = url.searchParams.get('X-Amz-Security-Token');
-      
-      // URL에서 보안 토큰 파라미터 제거
-      url.searchParams.delete('X-Amz-Security-Token');
-      
-      console.log('Audio URL:', url.toString());
-
-      // 오디오 파일 가져오기 시도
-      console.log("Attempting to fetch audio file");
-      const audioResponse = await fetch(url.toString(), {
-        headers: {
-          'X-Amz-Security-Token': securityToken
-        }
-      });
-      console.log('Audio fetch response status:', audioResponse.status);
-
-      if (!audioResponse.ok) {
-        throw new Error(`Failed to fetch audio: ${audioResponse.status} ${audioResponse.statusText}`);
-      }
-
-      const blob = await audioResponse.blob();
-      console.log("Audio blob received, size:", blob.size);
-
-      const objectUrl = URL.createObjectURL(blob);
-      console.log("Created object URL for audio:", objectUrl);
-      setAudioUrl(objectUrl);
-
+      const decodedUrl = decodeURIComponent(data.audioUrl);
+      console.log('Decoded URL:', decodedUrl);
+      setAudioUrl(decodedUrl);
     } catch (error) {
       console.error('Error:', error);
-      setError(`Failed to load audio: ${error.message}`);
+      setError('Failed to load audio. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    return () => {
-      // Clean up object URL when component unmounts
-      if (audioUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(audioUrl);
-      }
-    };
-  }, [audioUrl]);
 
   return (
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
@@ -105,7 +66,7 @@ export default function Home() {
       {audioUrl && (
         <div>
           <p>Audio URL: {audioUrl}</p>
-          <audio controls onError={(e) => console.error("Audio playback error:", e)}>
+          <audio controls>
             <source src={audioUrl} type="audio/wav" />
             Your browser does not support the audio element.
           </audio>
