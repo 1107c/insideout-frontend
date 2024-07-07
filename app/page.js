@@ -94,44 +94,52 @@ export default function Home() {
   };
 
   const handleAnswer = async (answer) => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}captcha`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          action: 'check', 
-          fileName: currentFileName, 
-          answer: answer,
-          attempt: loginAttempt
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const data = await response.json();
-
-      if (loginAttempt === 3) {
-        setUserChoice(answer);
-        alert(`Test completed. You chose: ${answer}`);
-        handleCloseCaptcha();
-        return;
-      }
-
-      if (data.correct) {
-        setLoginAttempt(prev => prev + 1);
-        setRetryColor('green');
-      } else {
-        setLoginAttempt(0);
-        setRetryColor('red');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      setError('Failed to check answer. Please try again.');
-    }
+	try {
+	  setIsLoading(true);
+	  setError(null);
+	  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}captcha`, {
+		method: 'POST',
+		headers: {
+		  'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({ 
+		  action: 'check', 
+		  fileName: currentFileName, 
+		  answer: answer,
+		  attempt: loginAttempt
+		}),
+	  });
+  
+	  if (!response.ok) {
+		throw new Error(`HTTP error! status: ${response.status}`);
+	  }
+  
+	  const data = await response.json();
+  
+	  if (data.finalTest) {
+		setUserChoice(answer);
+		if (data.reachedThreshold) {
+		  alert(`Test completed. The count has reached 10 or more.`);
+		} else {
+		  alert(`Final test completed. You chose: ${answer}`);
+		}
+		handleCloseCaptcha();
+		return;
+	  }
+  
+	  if (data.correct) {
+		setLoginAttempt(prev => prev + 1);
+		setRetryColor('green');
+	  } else {
+		setLoginAttempt(0);
+		setRetryColor('red');
+	  }
+	} catch (error) {
+	  console.error('Error:', error);
+	  setError('Failed to check answer. Please try again.');
+	} finally {
+	  setIsLoading(false);
+	}
   };
 
 
