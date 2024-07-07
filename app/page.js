@@ -49,7 +49,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ action: 'initialize' }),
+        body: JSON.stringify({ action: 'initialize', attempt: loginAttempt }),
       });
 
       if (!response.ok) {
@@ -94,20 +94,18 @@ export default function Home() {
   };
 
   const handleAnswer = async (answer) => {
-    if (loginAttempt === 3) {
-      setUserChoice(answer);
-      alert(`Test completed. You chose: ${answer}`);
-      handleCloseCaptcha();
-      return;
-    }
-
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}captcha`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ action: 'check', fileName: currentFileName, answer: answer }),
+        body: JSON.stringify({ 
+          action: 'check', 
+          fileName: currentFileName, 
+          answer: answer,
+          attempt: loginAttempt
+        }),
       });
 
       if (!response.ok) {
@@ -115,6 +113,13 @@ export default function Home() {
       }
 
       const data = await response.json();
+
+      if (loginAttempt === 3) {
+        setUserChoice(answer);
+        alert(`Test completed. You chose: ${answer}`);
+        handleCloseCaptcha();
+        return;
+      }
 
       if (data.correct) {
         setLoginAttempt(prev => prev + 1);
