@@ -134,6 +134,7 @@ export default function Home() {
     }
   };
 
+
   return (
     <div className={styles.parent}>
       <div className={styles.blockingFrame}>
