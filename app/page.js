@@ -13,6 +13,7 @@ export default function Home() {
   const [audioUrl, setAudioUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [currentFileName, setCurrentFileName] = useState('');
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export default function Home() {
     setRetryColor('');
     setUserChoice('');
     setAudioUrl('');
+    setCurrentFileName('');
   };
 
   const handlePlay = async () => {
@@ -62,6 +64,7 @@ export default function Home() {
 
       const decodedUrl = decodeURIComponent(data.audioUrl);
       setAudioUrl(decodedUrl);
+      setCurrentFileName(data.fileName);
 
       setIsPlaying(true);
       document.documentElement.style.setProperty('--my-end-width', '60px');
@@ -90,7 +93,7 @@ export default function Home() {
     }
   };
 
-  const handleAnswer = (answer) => {
+  const handleAnswer = async (answer) => {
     if (loginAttempt === 3) {
       setUserChoice(answer);
       alert(`Test completed. You chose: ${answer}`);
@@ -98,10 +101,32 @@ export default function Home() {
       return;
     }
 
-    // 여기서 서버로 답변을 보내고 검증하는 로직을 추가해야 합니다.
-    // 지금은 임시로 항상 맞았다고 가정합니다.
-    setLoginAttempt(prev => prev + 1);
-    setRetryColor('green');
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}captcha`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'check', fileName: currentFileName, answer: answer }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+
+      if (data.correct) {
+        setLoginAttempt(prev => prev + 1);
+        setRetryColor('green');
+      } else {
+        setLoginAttempt(0);
+        setRetryColor('red');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setError('Failed to check answer. Please try again.');
+    }
   };
 
   return (
