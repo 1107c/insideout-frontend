@@ -41,13 +41,74 @@ export default function Home() {
     setWrongAttempts(0);
   };
 
-  // handlePlay 함수는 변경 없음
+  const handlePlay = async () => {
+    if (isPlaying) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl) {
+        throw new Error('API URL is not defined');
+      }
+      const response = await fetch(`${apiUrl}captcha`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'initialize', attempt: loginAttempt }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+
+      if (!data.audioUrl) {
+        throw new Error('No audio URL provided');
+      }
+
+      const decodedUrl = decodeURIComponent(data.audioUrl);
+      setAudioUrl(decodedUrl);
+      setCurrentFileName(data.fileName);
+
+      setIsPlaying(true);
+      document.documentElement.style.setProperty('--my-end-width', '60px');
+      document.documentElement.style.setProperty('--my-end-height', '60px');
+      document.documentElement.style.setProperty('--animate-opacity', '0.8');
+      
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      
+      const audio = new Audio(decodedUrl);
+      audioRef.current = audio;
+      
+      audio.play();
+      audio.onended = function() {
+        document.documentElement.style.setProperty('--animate-opacity', '0');
+        setIsPlaying(false);
+        audioRef.current = null;
+      };
+    } catch (error) {
+      console.error('Error:', error);
+      setError('Failed to load audio. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleAnswer = async (answer) => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}captcha`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl) {
+        throw new Error('API URL is not defined');
+      }
+      const response = await fetch(`${apiUrl}captcha`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
