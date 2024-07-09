@@ -15,17 +15,19 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [currentFileName, setCurrentFileName] = useState('');
   const audioRef = useRef(null);
+  const [incorrectAttempts, setIncorrectAttempts] = useState(0);
 
   useEffect(() => {
-    setRetryText(`${loginAttempt} / 4`);
+    setRetryText(`${loginAttempt} / 2`);
   }, [loginAttempt]);
 
   const handleLogin = () => {
     setShowCaptcha(true);
     setLoginAttempt(0);
-    setRetryText('0 / 4');
+    setRetryText('0 / 2');
     setRetryColor('');
     setUserChoice('');
+    setIncorrectAttempts(0);
   };
 
   const handleCloseCaptcha = () => {
@@ -36,11 +38,12 @@ export default function Home() {
     setUserChoice('');
     setAudioUrl('');
     setCurrentFileName('');
+    setIncorrectAttempts(0);
   };
 
-  const handlePlay = async () => {
-    if (isPlaying) return;
+  // handlePlay 함수는 변경 없음
 
+  const handleAnswer = async (answer) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -49,95 +52,46 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ action: 'initialize', attempt: loginAttempt }),
+        body: JSON.stringify({ 
+          action: 'check', 
+          fileName: currentFileName, 
+          answer: answer,
+          attempt: loginAttempt
+        }),
       });
-
+  
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-
+  
       const data = await response.json();
-
-      if (!data.audioUrl) {
-        throw new Error('No audio URL provided');
+  
+      if (loginAttempt === 1) {  // 2번째 시도 (final test)
+        setUserChoice(answer);
+        handleCloseCaptcha();
+        return;
       }
-
-      const decodedUrl = decodeURIComponent(data.audioUrl);
-      setAudioUrl(decodedUrl);
-      setCurrentFileName(data.fileName);
-
-      setIsPlaying(true);
-      document.documentElement.style.setProperty('--my-end-width', '60px');
-      document.documentElement.style.setProperty('--my-end-height', '60px');
-      document.documentElement.style.setProperty('--animate-opacity', '0.8');
-      
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
+  
+      if (data.correct) {
+        setLoginAttempt(prev => prev + 1);
+        setRetryColor('green');
+        setIncorrectAttempts(0);
+      } else {
+        setIncorrectAttempts(prev => prev + 1);
+        if (incorrectAttempts + 1 >= 5) {
+          handleCloseCaptcha();
+          return;
+        }
+        setLoginAttempt(0);
+        setRetryColor('red');
       }
-      
-      const audio = new Audio(decodedUrl);
-      audioRef.current = audio;
-      
-      audio.play();
-      audio.onended = function() {
-        document.documentElement.style.setProperty('--animate-opacity', '0');
-        setIsPlaying(false);
-        audioRef.current = null;
-      };
     } catch (error) {
       console.error('Error:', error);
-      setError('Failed to load audio. Please try again.');
+      setError('Failed to check answer. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
-
-  const handleAnswer = async (answer) => {
-	try {
-	  setIsLoading(true);
-	  setError(null);
-	  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}captcha`, {
-		method: 'POST',
-		headers: {
-		  'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({ 
-		  action: 'check', 
-		  fileName: currentFileName, 
-		  answer: answer,
-		  attempt: loginAttempt
-		}),
-	  });
-  
-	  if (!response.ok) {
-		throw new Error(`HTTP error! status: ${response.status}`);
-	  }
-  
-	  const data = await response.json();
-  
-	  if (data.finalTest) {
-		setUserChoice(answer);
-		handleCloseCaptcha();
-		return;
-	  }
-  
-	  if (data.correct) {
-		setLoginAttempt(prev => prev + 1);
-		setRetryColor('green');
-	  } else {
-		setLoginAttempt(0);
-		setRetryColor('red');
-	  }
-	} catch (error) {
-	  console.error('Error:', error);
-	  setError('Failed to check answer. Please try again.');
-	} finally {
-	  setIsLoading(false);
-	}
-  };
-
-
 
   return (
     <div className={styles.parent}>
@@ -175,7 +129,7 @@ export default function Home() {
                 {retryText}
               </div>
               <div className={styles.question}>
-                {loginAttempt === 3 ? "Final test: Select any emotion for this audio." : "Play audio and select proper emotion."}
+                {loginAttempt === 1 ? "Final test: Select any emotion for this audio." : "Play audio and select proper emotion."}
               </div>
               <div className={styles.answers}>
                 <div className={styles.answerA}>
