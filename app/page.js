@@ -101,19 +101,49 @@ export default function Home() {
         </div>
         {!showCaptcha ? (
           <div className={styles.loginFrame}>
-            {/* 로그인 폼 코드는 변경 없음 */}
+            <div className={styles.loginElems}>
+              <input className={styles.inputId} type="text" placeholder="e-mail" />
+              <input className={styles.inputPw} type="password" placeholder="password" />
+              <div className={styles.forgotPasswordText}>Forgot password?</div>
+              <button className={styles.btnApply} onClick={handleLogin}>LOGIN</button>
+            </div>
           </div>
         ) : (
           <div className={styles.captchaWrapper}>
             <div className={styles.captcha}>
-              {/* 캡차 UI 코드는 대부분 변경 없음 */}
+              <div className={styles.captchaLogo}>
+                <img src="/recaptcha.png" className={styles.captchaLogoSrc} alt="reCAPTCHA Logo" />
+              </div>
+              <div className={styles.soundWrap}>
+                <div className={styles.eleWrap}>
+                  <button 
+                    className={styles.btnPlay} 
+                    onClick={handlePlay}
+                    disabled={isPlaying || isLoading}
+                  >
+                    {isLoading ? 'Loading...' : <img src="/play_button.png" className={styles.btnPlaySrc} alt="Play Button" />}
+                  </button>
+                </div>
+              </div>
               <div className={styles.textRetry} style={retryColor ? {color: retryColor} : {}}>
                 {retryText}
               </div>
               <div className={styles.question}>
                 Play audio and select proper emotion.
               </div>
-              {/* 답변 버튼 코드는 변경 없음 */}
+              <div className={styles.answers}>
+                <div className={styles.answerA}>
+                  {['anger', 'fearful', 'disgust', 'sad'].map(emotion => (
+                    <button key={emotion} onClick={() => handleAnswer(emotion)}>{emotion}</button>
+                  ))}
+                </div>
+                <div className={styles.answerB}>
+                  {['neutral', 'calm', 'happy', 'surprised'].map(emotion => (
+                    <button key={emotion} onClick={() => handleAnswer(emotion)}>{emotion}</button>
+                  ))}
+                </div>
+              </div>
+              {error && <p style={{ color: 'red' }}>{error}</p>}
             </div>
           </div>
         )}
