@@ -118,11 +118,6 @@ export default function Home() {
   
 	  if (data.finalTest) {
 		setUserChoice(answer);
-		if (data.reachedThreshold) {
-		  alert(`Test completed. The count has reached 10 or more.`);
-		} else {
-		  alert(`Final test completed. You chose: ${answer}`);
-		}
 		handleCloseCaptcha();
 		return;
 	  }
